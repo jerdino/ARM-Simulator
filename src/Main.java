@@ -2,16 +2,21 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.Scanner;
-import java.util.ArrayList;
+import java.lang.reflect.Array;
+import java.util.*;
 
 public class Main {
     public static int PC = 64;
+    public static Map<Object,ArrayList<String>> map = new HashMap<>();
 
     public static void main(String[] args) {
         ArrayList<String> instructions = readInput();
-        print(instructions);
-        write(instructions);
+        //print(instructions);
+        //write(instructions);
+        //map = sortMap(map);
+        printMap();
+
+
     }
 
     public static ArrayList<String> readInput(){
@@ -57,6 +62,21 @@ public class Main {
     public static void print(ArrayList<String> instructions){
         for (String s : instructions)
              System.out.println(s);
+    }
+
+    public static void printMap(){
+        map = new TreeMap<Object, ArrayList<String>>(map);
+        for (Map.Entry<Object, ArrayList<String>> m : map.entrySet()){
+            System.out.print(m.getKey()+": ");
+            for (String s : m.getValue()) {
+                System.out.print(s + " ");
+            }
+            System.out.println();
+        }
+    }
+
+    public static Map<Object, ArrayList<String>> sortMap(Map<Object, ArrayList<String>> unsorted){
+        return new TreeMap<Object, ArrayList<String>>(map);
     }
 
     public static void write(ArrayList<String> instructions) {
@@ -131,6 +151,8 @@ public class Main {
             System.out.println("Error. Opcode not supported");
         }
         String ARM = instruction + " X" + src1 + ", " + "#" + offsetStr;
+        final String command = instruction;
+        map.put(PC, new ArrayList<String>(){{ add(command); add(src1); add(offsetStr); }});
         //System.out.println(binary + '\t' + PC + '\t' + ARM);
         return binary + '\t' + PC + '\t' + ARM;
     }
@@ -156,6 +178,8 @@ public class Main {
             System.out.println("Error: Opcode not supported");
 
         String ARM = instruction + " X" + dest + ", X" + src1 + ", #" + immVal;
+        final String command = instruction;
+        map.put(PC, new ArrayList<String>(){{ add(command); add(dest); add(src1); add(immVal); }});
         //System.out.println(binary + '\t' + PC + '\t' + ARM);
         return binary + '\t' + PC + '\t' + ARM;
     }
@@ -185,6 +209,8 @@ public class Main {
             System.out.println("Error: Opcode not supported");
 
         String ARM = instruction + " X" + dest + ", X" + src1 + ", X" + src2;
+        final String command = instruction;
+        map.put(PC, new ArrayList<String>(){{ add(command); add(dest); add(src1); add(src2); }});
         //System.out.println(binary + '\t' + PC + '\t' + ARM);
         return binary + '\t' + PC + '\t' + ARM;
     }
@@ -204,6 +230,8 @@ public class Main {
             System.out.println("ERROR: Opcode not supported");
 
         String ARM = instruction + " X" + dest + ", [X" + src1 + ", #" + immVal + "]";
+        final String command = instruction;
+        map.put(PC, new ArrayList<String>(){{ add(command); add(dest); add(src1); add(immVal); }});
         //System.out.println(binary + '\t' + PC + '\t' + ARM);
         return binary + '\t' + PC + '\t' + ARM;
     }
@@ -214,6 +242,12 @@ public class Main {
             value = "DUMMY";
         else
             value = Integer.toString(twosToDec(binary));
+        //mapInsert("DATA", value);
+        final String val = value;
+        map.put(PC, new ArrayList<String>(){{ add(val); }});
         return binary + '\t' + PC + '\t' + value;
     }
+
+    ////////////////////////////////// INSTRUCTIONS ////////////////////////////////////////////////
+
 }
