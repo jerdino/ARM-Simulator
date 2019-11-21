@@ -336,17 +336,19 @@ public class Main {
     }
 
     public static void lsr(boolean isImmVal, int dest, int src1, int src2){
-        if (isImmVal)
-            reg[dest] = reg[src1] >> src2;
-        else
-            reg[dest] = reg[src1] >> reg[src2];
+        String binary = Integer.toBinaryString(reg[src2]);
+        binary = signExtend32(binary);
+        String offsetString = binary.substring(binary.length()-5);
+        int offset = toDec(offsetString);
+        reg[dest] = reg[src1] >> offset;
     }
 
     public static void lsl(boolean isImmVal, int dest, int src1, int src2){
-        if (isImmVal)
-            reg[dest] = reg[src1] << src2;
-        else
-            reg[dest] = reg[src1] << reg[src2];
+        String binary = Integer.toBinaryString(reg[src2]);
+        binary = signExtend32(binary);
+        String offsetString = binary.substring(binary.length()-5);
+        int offset = toDec(offsetString);
+        reg[dest] = reg[src1] << offset;
     }
 
     public static void runCat4(ArrayList<String> list){
@@ -402,9 +404,6 @@ public class Main {
         try {
             FileWriter fileWriter = new FileWriter("disassembly.txt");
             PrintWriter printWriter = new PrintWriter(fileWriter);
-
-            for (String s : instructions)
-                printWriter.println(s);
 
             printWriter.close();
         } catch (IOException e){
@@ -462,46 +461,66 @@ public class Main {
 
     }
 
+    public static String signExtend32(String bin){
+        while (bin.length() < 32){
+            bin = "0" + bin;
+        }
+        return bin;
+    }
+
     public static void printCycle(int instAddy, ArrayList<String> list){
         String instr_string = "";
+        boolean append = true;
         if (list.get(0) .equals("DUMMY"))
             instr_string = list.get(0);
         else
             instr_string = list.get(0) + " " + list.get(1);
 
-        System.out.println("--------------------");
-        System.out.println("Cycle " + cycle + ":" + '\t' + instAddy + '\t' + instr_string);
-        System.out.println();
-        System.out.println("Registers");
-        System.out.println("X00:" + '\t' + reg[0] + '\t' + reg[1] + '\t' + reg[2] + '\t' + reg[3] + '\t' + reg[4] +
-                '\t' + reg[5] + '\t' + reg[6] + '\t' + reg[7]);
-        System.out.println("X08:" + '\t' + reg[8] + '\t' + reg[9] + '\t' + reg[10] + '\t' + reg[11] + '\t' + reg[12] +
-                '\t' + reg[13] + '\t' + reg[14] + '\t' + reg[15]);
-        System.out.println("X16:" + '\t' + reg[16] + '\t' + reg[17] + '\t' + reg[18] + '\t' + reg[19] + '\t' + reg[20] +
-                '\t' + reg[21] + '\t' + reg[22] + '\t' + reg[23]);
-        System.out.println("X24:" + '\t' + reg[24] + '\t' + reg[25] + '\t' + reg[26] + '\t' + reg[27] + '\t' + reg[28] +
-                '\t' + reg[29] + '\t' + reg[30] + '\t' + reg[31]);
-        System.out.println();
+        if (instAddy == 64)
+            append = false;
 
-        System.out.println("Data");
-        int counter = 1;
-        int dataAddress = firstDataAddress;
-        for (int i = firstDataAddress; i < 64+(27)*4; i+=4){
-            if ( (counter%8) == 1){
-                System.out.print(dataAddress + ":");
-                dataAddress += (8*4);
-            }
-            System.out.print("\t" + map.get(i).get(0));
+        try {
+            FileWriter fileWriter = new FileWriter("simulation.txt", append);
+            PrintWriter printWriter = new PrintWriter(fileWriter);
 
-            if ((counter%8) == 0) {
-                System.out.println();
-                counter = 1;
+            printWriter.println("--------------------");
+            printWriter.println("Cycle " + cycle + ":" + '\t' + instAddy + '\t' + instr_string);
+            printWriter.println();
+            printWriter.println("Registers");
+            printWriter.println("X00:" + '\t' + reg[0] + '\t' + reg[1] + '\t' + reg[2] + '\t' + reg[3] + '\t' + reg[4] +
+                    '\t' + reg[5] + '\t' + reg[6] + '\t' + reg[7]);
+            printWriter.println("X08:" + '\t' + reg[8] + '\t' + reg[9] + '\t' + reg[10] + '\t' + reg[11] + '\t' + reg[12] +
+                    '\t' + reg[13] + '\t' + reg[14] + '\t' + reg[15]);
+            printWriter.println("X16:" + '\t' + reg[16] + '\t' + reg[17] + '\t' + reg[18] + '\t' + reg[19] + '\t' + reg[20] +
+                    '\t' + reg[21] + '\t' + reg[22] + '\t' + reg[23]);
+            printWriter.println("X24:" + '\t' + reg[24] + '\t' + reg[25] + '\t' + reg[26] + '\t' + reg[27] + '\t' + reg[28] +
+                    '\t' + reg[29] + '\t' + reg[30] + '\t' + reg[31]);
+            printWriter.println();
+
+            printWriter.println("Data");
+            int counter = 1;
+            int dataAddress = firstDataAddress;
+            for (int i = firstDataAddress; i < 64+(27)*4; i+=4){
+                if ( (counter%8) == 1){
+                    printWriter.print(dataAddress + ":");
+                    dataAddress += (8*4);
+                }
+                printWriter.print("\t" + map.get(i).get(0));
+
+                if ((counter%8) == 0) {
+                    printWriter.println();
+                    counter = 1;
+                }
+                else {
+                    counter++;
+                }
             }
-            else {
-                counter++;
-            }
+            printWriter.println("\n");
+
+            printWriter.close();
+
+        } catch (IOException e){
+            System.out.println(e);
         }
-        System.out.println();
     }
-
 }
