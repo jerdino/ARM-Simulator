@@ -1,36 +1,33 @@
 /*
-On my honor, I have neither given nor received
-unauthorized aid on this assignment
+Tyler Jerd
+CDA3101 ARM Simulator
+"On my honor, I have neither given nor received
+unauthorized aid on this assignment"
  */
 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.lang.reflect.Array;
 import java.util.*;
 
-public class Main {
-    public static int PC = 64;
-    public static Map<Object, ArrayList<String>> map = new TreeMap<>();
-    public static int[] reg = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
-    public static int cycle = -1;
-    public static int firstDataAddress = -1;
+public class ARMsim {
+    private static int PC = 64;
+    private static Map<Object, ArrayList<String>> map = new TreeMap<>();
+    private static int[] reg = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+    private static int cycle = -1;
+    private static int firstDataAddress = -1;
     //public static int location = -1;
 
     public static void main(String[] args) {
-        ArrayList<String> instructions = readInput();
-        //print(instructions);
-        //write(instructions);
-        //map = sortMap(map);
-        //printMap();
-        ArrayList<String> simulation = simulation();
-        //printCycle();
-
+        String fileName = args[0];
+        ArrayList<String> instructions = readInput(fileName);
+        writeDisassembler(instructions);
+        simulation();
     }
 
     ////////////////////////////  INPUT  ////////////////////////////////////////////////////////
-    public static ArrayList<String> readInput(){
+    private static ArrayList<String> readInput(String fileName){
         String line = "";
         String category = "";
         ArrayList<String> instructions = new ArrayList<>();
@@ -38,7 +35,7 @@ public class Main {
         boolean stupidCAP = false;
 
         try {
-            File file = new File("sample.txt");
+            File file = new File(fileName);
             Scanner sc = new Scanner(file);
 
             while (sc.hasNextLine()) {
@@ -72,7 +69,7 @@ public class Main {
         return instructions;
     }
 
-    public static String cat1(String binary){
+    private static String cat1(String binary){
         String opcode = binary.substring(3,8);
         String src1 = regToXZR(Integer.toString(toDec(binary.substring(8,13))));
         String offsetStr = Integer.toString(twosToDec(binary.substring(14)));
@@ -87,15 +84,14 @@ public class Main {
         else {
             System.out.println("Error. Opcode not supported");
         }
-        String ARM = instruction + " X" + src1 + ", " + "#" + offsetStr;
         final String command = instruction;
-        final String instr_string = " X" + src1 + ", " + "#" + offsetStr;
+        final String instr_string = "X" + src1 + ", " + "#" + offsetStr;
         map.put(PC, new ArrayList<String>(){{ add(command); add(instr_string); add("1"); add(XZRToReg(src1)); add(offsetStr); }});
         //System.out.println(binary + '\t' + PC + '\t' + ARM);
-        return binary + '\t' + PC + '\t' + ARM;
+        return binary + '\t' + PC + '\t' + instr_string;
     }
 
-    public static String cat2(String binary){
+    private static String cat2(String binary){
         String opcode = binary.substring(3,10);
         String dest = Integer.toString(toDec(binary.substring(10,15)));
         String src1 = regToXZR(Integer.toString(toDec(binary.substring(15,20))));
@@ -115,15 +111,14 @@ public class Main {
         else
             System.out.println("Error: Opcode not supported");
 
-        String ARM = instruction + " X" + dest + ", X" + src1 + ", #" + immVal;
         final String command = instruction;
-        final String instr_string =  " X" + dest + ", X" + src1 + ", #" + immVal;
+        final String instr_string =  "X" + dest + ", X" + src1 + ", #" + immVal;
         map.put(PC, new ArrayList<String>(){{ add(command); add(instr_string); add("2"); add(XZRToReg(dest)); add(XZRToReg(src1)); add(immVal); }});
         //System.out.println(binary + '\t' + PC + '\t' + ARM);
-        return binary + '\t' + PC + '\t' + ARM;
+        return binary + '\t' + PC + '\t' + instr_string;
     }
 
-    public static String cat3(String binary){
+    private static String cat3(String binary){
         String opcode = binary.substring(3,11);
         String dest = Integer.toString(toDec(binary.substring(11,16)));
         String src1 = regToXZR(Integer.toString(toDec(binary.substring(16,21))));
@@ -147,15 +142,14 @@ public class Main {
         else
             System.out.println("Error: Opcode not supported");
 
-        String ARM = instruction + " X" + dest + ", X" + src1 + ", X" + src2;
         final String command = instruction;
-        final String instr_string = " X" + dest + ", X" + src1 + ", X" + src2;
+        final String instr_string = "X" + dest + ", X" + src1 + ", X" + src2;
         map.put(PC, new ArrayList<String>(){{ add(command); add(instr_string); add("3"); add(XZRToReg(dest)); add(XZRToReg(src1)); add(XZRToReg(src2)); }});
         //System.out.println(binary + '\t' + PC + '\t' + ARM);
-        return binary + '\t' + PC + '\t' + ARM;
+        return binary + '\t' + PC + '\t' + instr_string;
     }
 
-    public static String cat4(String binary){
+    private static String cat4(String binary){
         String opcode = binary.substring(3,11);
         String dest = Integer.toString(toDec(binary.substring(11,16)));
         String src1 = regToXZR(Integer.toString(toDec(binary.substring(16,21))));
@@ -169,15 +163,14 @@ public class Main {
         else
             System.out.println("ERROR: Opcode not supported");
 
-        String ARM = instruction + " X" + dest + ", [X" + src1 + ", #" + immVal + "]";
         final String command = instruction;
-        final String instr_string = " X" + dest + ", [X" + src1 + ", #" + immVal + "]";
+        final String instr_string = "X" + dest + ", [X" + src1 + ", #" + immVal + "]";
         map.put(PC, new ArrayList<String>(){{ add(command); add(instr_string); add("4"); add(XZRToReg(dest)); add(XZRToReg(src1)); add(immVal); }});
         //System.out.println(binary + '\t' + PC + '\t' + ARM);
-        return binary + '\t' + PC + '\t' + ARM;
+        return binary + '\t' + PC + '\t' + instr_string;
     }
 
-    public static String programData(String binary){
+    private static String programData(String binary){
         String value = "";
         if (binary .equals("10100000000000000000000000000000"))
             value = "DUMMY";
@@ -190,7 +183,7 @@ public class Main {
     }
 
     ////////////////////////////////// INSTRUCTIONS ////////////////////////////////////////////////
-    public static ArrayList<String> simulation(){
+    private static void simulation(){
         cycle = 1;
         for (int i = 64; i < 64+map.size()*4; i += 4){   //64+map.size()*4
             if (map.get(i).get(0) .equals("DUMMY")) {
@@ -218,11 +211,9 @@ public class Main {
             i = newLocation;
             cycle++;
         }
-
-        return new ArrayList<String>(){{add("HELLO WORLD");}};
     }
 
-    public static int runCat1(int loc, ArrayList<String> list){
+    private static int runCat1(int loc, ArrayList<String> list){
         // [0-5] = [command, instr_string, "1", src1, offsetStr]
         String command = list.get(0);
         String src1 = list.get(3);
@@ -245,7 +236,7 @@ public class Main {
         return newLocation;
     }
 
-    public static boolean CBZ(String src1){
+    private static boolean CBZ(String src1){
         int index = Integer.parseInt(src1);
         if (reg[index] == 0)
             return true;
@@ -253,7 +244,7 @@ public class Main {
             return false;
     }
 
-    public static boolean CBNZ(String src1){
+    private static boolean CBNZ(String src1){
         int index = Integer.parseInt(src1);
         if (reg[index] != 0)
             return true;
@@ -265,12 +256,17 @@ public class Main {
 //
 //    }
 
-    public static void runCat2or3(ArrayList<String> list){
+    private static void runCat2or3(ArrayList<String> list){
         String command = list.get(0);
         int  dest = Integer.parseInt(list.get(3));
         int src1 = Integer.parseInt(list.get(4));
         int src2 = Integer.parseInt(list.get(5));
         boolean isImmVal;
+
+        // If the destination register = 31, return and do nothing, cant alter XZR
+        if (dest == 31)
+            return;
+
         if (command.substring(command.length()-1) .equalsIgnoreCase("I")) {
             isImmVal = true;
         }
@@ -300,42 +296,42 @@ public class Main {
         }
     }
 
-    public static void eor(boolean isImmVal, int dest, int src1, int src2){
+    private static void eor(boolean isImmVal, int dest, int src1, int src2){
         if (isImmVal)
             reg[dest] = reg[src1] ^ src2;
         else
             reg[dest] = reg[src1] ^ reg[src2];
     }
 
-    public static void add(boolean isImmVal, int dest, int src1, int src2){
+    private static void add(boolean isImmVal, int dest, int src1, int src2){
         if (isImmVal)
             reg[dest] = reg[src1] + src2;
         else
             reg[dest] = reg[src1] + reg[src2];
     }
 
-    public static void sub(boolean isImmVal, int dest, int src1, int src2){
+    private static void sub(boolean isImmVal, int dest, int src1, int src2){
         if (isImmVal)
             reg[dest] = reg[src1] - src2;
         else
             reg[dest] = reg[src1] - reg[src2];
     }
 
-    public static void and(boolean isImmVal, int dest, int src1, int src2){
+    private static void and(boolean isImmVal, int dest, int src1, int src2){
         if (isImmVal)
             reg[dest] = reg[src1] & src2;
         else
             reg[dest] = reg[src1] & reg[src2];
     }
 
-    public static void orr(boolean isImmVal, int dest, int src1, int src2){
+    private static void orr(boolean isImmVal, int dest, int src1, int src2){
         if (isImmVal)
             reg[dest] = reg[src1] | src2;
         else
             reg[dest] = reg[src1] | reg[src2];
     }
 
-    public static void lsr(boolean isImmVal, int dest, int src1, int src2){
+    private static void lsr(boolean isImmVal, int dest, int src1, int src2){
         String binary = Integer.toBinaryString(reg[src2]);
         binary = signExtend32(binary);
         String offsetString = binary.substring(binary.length()-5);
@@ -343,7 +339,7 @@ public class Main {
         reg[dest] = reg[src1] >> offset;
     }
 
-    public static void lsl(boolean isImmVal, int dest, int src1, int src2){
+    private static void lsl(boolean isImmVal, int dest, int src1, int src2){
         String binary = Integer.toBinaryString(reg[src2]);
         binary = signExtend32(binary);
         String offsetString = binary.substring(binary.length()-5);
@@ -351,7 +347,7 @@ public class Main {
         reg[dest] = reg[src1] << offset;
     }
 
-    public static void runCat4(ArrayList<String> list){
+    private static void runCat4(ArrayList<String> list){
         String command = list.get(0);
         String target = list.get(3);
         String src1 = list.get(4);
@@ -365,17 +361,23 @@ public class Main {
         }
     }
 
-    public static void ldur(String dest, String src1, String immVal){
+    private static void ldur(String dest, String src1, String immVal){
         // Get value from memory stores at memory[valueOf(src1) + immVal]
         // Then store value in dest
+        // If trying to load in XZR break and do nothing
         int srcIndex = Integer.parseInt(src1);  // register number
         int offset = Integer.parseInt(immVal);
         String value = map.get(reg[srcIndex]+offset).get(0);
         int destIndex = Integer.parseInt(dest);
-        reg[destIndex] = Integer.parseInt(value);
+        if (destIndex == 31) {
+            return;
+        }
+        else {
+            reg[destIndex] = Integer.parseInt(value);
+        }
     }
 
-    public static void stur(String target, String src1, String immVal){
+    private static void stur(String target, String src1, String immVal){
         // Take the value in target and store it in memory[valueAt(src1) + immVal]
         int tIndex = Integer.parseInt(target);
         String value = Integer.toString(reg[tIndex]);
@@ -385,12 +387,12 @@ public class Main {
     }
 
     ///////////////////////////////// HELPER FUNCTIONS ////////////////////////////////////////////
-    public static void print(ArrayList<String> instructions){
+    private static void print(ArrayList<String> instructions){
         for (String s : instructions)
             System.out.println(s);
     }
 
-    public static void printMap(){
+    private static void printMap(){
         for (Map.Entry<Object, ArrayList<String>> m : map.entrySet()){
             System.out.print(m.getKey()+": ");
             for (String s : m.getValue()) {
@@ -400,10 +402,13 @@ public class Main {
         }
     }
 
-    public static void write(ArrayList<String> instructions) {
+    private static void writeDisassembler(ArrayList<String> instructions) {
         try {
-            FileWriter fileWriter = new FileWriter("disassembly.txt");
+            FileWriter fileWriter = new FileWriter("sample_disassembly.txt");
             PrintWriter printWriter = new PrintWriter(fileWriter);
+
+            for (String s: instructions)
+                printWriter.println(s);
 
             printWriter.close();
         } catch (IOException e){
@@ -411,7 +416,7 @@ public class Main {
         }
     }
 
-    public static int twosToDec(String input) {
+    private static int twosToDec(String input) {
         //Check if the number is negative.
         //We know it's negative if it starts with a 1
         if (input.charAt(0) == '1') {
@@ -424,7 +429,7 @@ public class Main {
         }
     }
 
-    public static String invertDigits(String binaryInt) {
+    private static String invertDigits(String binaryInt) {
         String result = binaryInt;
         result = result.replace("0", " "); //temp replace 0s
         result = result.replace("1", "0"); //replace 1s with 0s
@@ -432,7 +437,7 @@ public class Main {
         return result;
     }
 
-    public static int toDec(String input){
+    private static int toDec(String input){
         long bin = Long.parseLong(input);
         int pwr = 0;
         int dec = 0;
@@ -446,14 +451,14 @@ public class Main {
     }
 
     // If the value for the register is 31, this function will return the "ZR" string instead of "31"
-    public static String regToXZR(String num){
+    private static String regToXZR(String num){
         if (num .equals("31") || num.equals("11111"))
             return "ZR";
         else
             return num;
     }
 
-    public static String XZRToReg(String num){
+    private static String XZRToReg(String num){
         if (num .equals("ZR"))
             return "31";
         else
@@ -461,14 +466,14 @@ public class Main {
 
     }
 
-    public static String signExtend32(String bin){
+    private static String signExtend32(String bin){
         while (bin.length() < 32){
             bin = "0" + bin;
         }
         return bin;
     }
 
-    public static void printCycle(int instAddy, ArrayList<String> list){
+    private static void printCycle(int instAddy, ArrayList<String> list){
         String instr_string = "";
         boolean append = true;
         if (list.get(0) .equals("DUMMY"))
@@ -480,7 +485,7 @@ public class Main {
             append = false;
 
         try {
-            FileWriter fileWriter = new FileWriter("simulation.txt", append);
+            FileWriter fileWriter = new FileWriter("sample_simulation.txt", append);
             PrintWriter printWriter = new PrintWriter(fileWriter);
 
             printWriter.println("--------------------");
@@ -500,7 +505,7 @@ public class Main {
             printWriter.println("Data");
             int counter = 1;
             int dataAddress = firstDataAddress;
-            for (int i = firstDataAddress; i < 64+(27)*4; i+=4){
+            for (int i = firstDataAddress; i < 64+(map.size())*4; i+=4){
                 if ( (counter%8) == 1){
                     printWriter.print(dataAddress + ":");
                     dataAddress += (8*4);
